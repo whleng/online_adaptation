@@ -23,11 +23,29 @@ All that needs doing is replacing all occurances of `online_adaptation` and `onl
 
 ## Installation
 
+Starting anew:
+
+```bash
+# Create a virtualenvironment.
+pyenv virtualenv 3.8.18 oa
+
+# Activate it.
+pyenv activate oa
+
+```
 First, we'll need to install platform-specific dependencies for Pytorch. See [here](https://pytorch.org/get-started/locally/) for more details. For example, if we want to use CUDA 11.8 with Pytorch 2.
+
+
 
 ```bash
 
-pip install torch==2.0.1 torchvision==0.15.2 --index-url https://download.pytorch.org/whl/cu118/
+# These are required for Flowbot3d.
+
+pip install pytorch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cu117/
+
+pip install pyg-lib torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.13.0+cu117.html
+
+pip install "flowbot3d @ git+https://github.com/r-pad/flowbot3d.git"
 
 ```
 
