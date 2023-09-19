@@ -1,5 +1,5 @@
 [project]
-name = "python-ml-project-template"
+name = "online-adaptation"
 version = "0.1.0"
 description = "A Python Package Template"
 readme = "README.md"
@@ -51,7 +51,7 @@ build_docs = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-python_ml_project_template = ["py.typed"]
+online_adaptation = ["py.typed"]
 
 [tool.isort]
 profile = "black"

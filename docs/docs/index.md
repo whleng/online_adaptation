@@ -1,4 +1,4 @@
-# python_ml_project_template
+# online_adaptation
 
 Some sample text for the website.
 

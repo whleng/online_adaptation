@@ -5,10 +5,10 @@ import torch
 import torch.utils._pytree as pytree
 import wandb
 
-from python_ml_project_template.datasets.cifar10 import CIFAR10DataModule
-from python_ml_project_template.metrics.classification import get_metrics
-from python_ml_project_template.models.classifier import ClassifierInferenceModule
-from python_ml_project_template.utils.script_utils import (
+from online_adaptation.datasets.cifar10 import CIFAR10DataModule
+from online_adaptation.metrics.classification import get_metrics
+from online_adaptation.models.classifier import ClassifierInferenceModule
+from online_adaptation.utils.script_utils import (
     PROJECT_ROOT,
     create_model,
     flatten_outputs,
