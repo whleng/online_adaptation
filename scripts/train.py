@@ -3,19 +3,26 @@ import json
 import hydra
 import lightning as L
 import omegaconf
+import rpad.pyg.nets.pointnet2 as pnp
 import torch
 import wandb
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 
-from online_adaptation.datasets.cifar10 import CIFAR10DataModule
-from online_adaptation.models.classifier import ClassifierTrainingModule
+from online_adaptation.datasets.flowbot import FlowBotDataModule
+from online_adaptation.models.flowbot3d import FlowPredictorTrainingModule
 from online_adaptation.utils.script_utils import (
     PROJECT_ROOT,
     LogPredictionSamplesCallback,
-    create_model,
     match_fn,
 )
+
+data_module_class = {
+    "flowbot": FlowBotDataModule,
+}
+training_module_class = {
+    "flowbot": FlowPredictorTrainingModule,
+}
 
 
 @hydra.main(config_path="../configs", config_name="train", version_base="1.3")
@@ -50,11 +57,20 @@ def main(cfg):
     # or with an if statement, or by using hydra.instantiate.
     ######################################################################
 
-    datamodule = CIFAR10DataModule(
+    trajectory_len = 1 if cfg.dataset.name == "flowbot" else cfg.training.trajectory_len
+    # Create FlowBot dataset
+    datamodule = data_module_class[cfg.dataset.name](
         root=cfg.dataset.data_dir,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.resources.num_workers,
+        n_proc=cfg.resources.n_proc_per_worker,
+        seed=cfg.seed,
+        trajectory_len=trajectory_len,  # Only used when training trajectory model
     )
+    train_loader = datamodule.train_dataloader()
+    train_val_loader = datamodule.train_val_dataloader()
+    val_loader = datamodule.val_dataloader()
+    unseen_loader = datamodule.unseen_dataloader()
 
     ######################################################################
     # Create the network(s) which will be trained by the Training Module.
@@ -69,15 +85,17 @@ def main(cfg):
     # and eval can be the same.
     #
     # If it's a custom network, a good idea is to put the custom network
-    # in `online_adaptation.nets.my_net`.
+    # in `open_anything_diffusion.nets.my_net`.
     ######################################################################
 
     # Model architecture is dataset-dependent, so we have a helper
     # function to create the model (while separating out relevant vals).
-    network = create_model(
-        image_size=cfg.dataset.image_size,
-        num_classes=cfg.dataset.num_classes,
-        model_cfg=cfg.model,
+
+    mask_channel = 1 if cfg.training.mask_input_channel else 0
+    network = pnp.PN2Dense(
+        in_channels=mask_channel,
+        out_channels=3 * trajectory_len,
+        p=pnp.PN2DenseParams(),
     )
 
     ######################################################################
@@ -87,7 +105,7 @@ def main(cfg):
     # and the logging.
     ######################################################################
 
-    model = ClassifierTrainingModule(network, training_cfg=cfg.training)
+    model = training_module_class[cfg.dataset.name](network, training_cfg=cfg.training)
 
     ######################################################################
     # Set up logging in WandB.
@@ -137,7 +155,10 @@ def main(cfg):
         logger=logger,
         callbacks=[
             # Callback which logs whatever visuals (i.e. dataset examples, preds, etc.) we want.
-            LogPredictionSamplesCallback(logger),
+            LogPredictionSamplesCallback(
+                logger=logger,
+                eval_per_n_epoch=cfg.training.check_val_every_n_epoch,
+            ),
             # This checkpoint callback saves the latest model during training, i.e. so we can resume if it crashes.
             # It saves everything, and you can load by referencing last.ckpt.
             ModelCheckpoint(
@@ -152,7 +173,7 @@ def main(cfg):
             ModelCheckpoint(
                 dirpath=cfg.lightning.checkpoint_dir,
                 filename="{epoch}-{step}-{val_loss:.2f}-weights-only",
-                monitor="val_loss",
+                monitor="val/loss",
                 mode="min",
                 save_weights_only=True,
             ),
@@ -179,7 +200,7 @@ def main(cfg):
     # Train the model.
     ######################################################################
 
-    trainer.fit(model, datamodule=datamodule)
+    trainer.fit(model, train_loader, [train_val_loader, val_loader, unseen_loader])
 
 
 if __name__ == "__main__":

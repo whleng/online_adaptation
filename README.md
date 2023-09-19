@@ -99,3 +99,22 @@ docker push <my_dockerhub_username>/online-adaptation:latest
 ## Running on Clusters
 
 * [Autobot](autobot.md)
+
+## Training
+
+To train a model, run:
+
+```bash
+
+# Flowbot
+python scripts/train.py
+```
+
+## Evaluation
+
+To evaluate a model, run:
+
+```bash
+# Flowbot
+python scripts/eval.py wandb.group=Null checkpoint.run_id=<run-id>
+```
