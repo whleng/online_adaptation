@@ -11,7 +11,7 @@ import tqdm
 import wandb
 from flowbot3d.models.artflownet import flow_metrics
 
-from online_adaptation.datasets.flowbot import FlowBotDataModule
+from online_adaptation.datasets.flow_dm import FlowBotDataModule
 from online_adaptation.models.flowbot3d import FlowPredictorInferenceModule
 from online_adaptation.utils.script_utils import PROJECT_ROOT, match_fn
 
