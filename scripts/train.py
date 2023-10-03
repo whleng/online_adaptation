@@ -10,6 +10,8 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 
 from online_adaptation.datasets.flow_dm import FlowBotDataModule
+from online_adaptation.datasets.flow_history_dm import FlowHistoryDataModule
+from online_adaptation.models.artflownet_history import ArtFlowNetHistoryModel
 from online_adaptation.models.flowbot3d import FlowPredictorTrainingModule
 from online_adaptation.utils.script_utils import (
     PROJECT_ROOT,
@@ -19,9 +21,11 @@ from online_adaptation.utils.script_utils import (
 
 data_module_class = {
     "flowbot": FlowBotDataModule,
+    "flowbot_history": FlowHistoryDataModule,
 }
 training_module_class = {
     "flowbot": FlowPredictorTrainingModule,
+    "flowbot_history": ArtFlowNetHistoryModel,
 }
 
 
