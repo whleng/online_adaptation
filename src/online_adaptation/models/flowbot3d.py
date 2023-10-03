@@ -181,8 +181,8 @@ class FlowPredictorInferenceModule(L.LightningModule):
         assert len(xyz.shape) == 2
         assert len(mask.shape) == 1
 
-        data = Data(pos=xyz, mask=mask)
-        batch = Batch.from_data_list([data])
+        data = tgd.Data(pos=xyz, mask=mask)
+        batch = tgd.Batch.from_data_list([data])
         batch = batch.to(self.device)
         self.eval()
         with torch.no_grad():

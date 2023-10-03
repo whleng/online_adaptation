@@ -52,6 +52,7 @@ def masked_artflownet_loss(
 @dataclass
 class ArtFlowNetHistoryParams:
     mask_output_flow: bool = False
+    batch_size: int = 64
 
 
 class ArtFlowNetHistoryModel(L.LightningModule):
@@ -92,10 +93,10 @@ class ArtFlowNetHistoryModel(L.LightningModule):
         batch = batch.to(self.device)
         self.eval()
         with torch.no_grad():
-            flow = self.forward(batch)
-        return flow
+            pred = self.forward(batch)
+        return pred["preds"]
 
-    def forward(self, batch: tgd.Batch):
+    def forward(self, batch: tgd.Batch) -> Dict[str, torch.Tensor]:
         data_list = batch.to_data_list()
         new_data_list = []
         pc_masks = []
@@ -113,7 +114,7 @@ class ArtFlowNetHistoryModel(L.LightningModule):
             )
             pc_masks.append(mask)
             new_data_list.append(new_data)
-        mask_tensor = torch.cat(pc_masks, axis=0).bool()
+        mask_tensor = torch.cat(pc_masks, dim=0).bool()
         new_batch = Batch.from_data_list(new_data_list)
         new_batch = new_batch.to(self.device)
         preds = self.flownet(new_batch)[mask_tensor.squeeze()]

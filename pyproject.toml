@@ -56,7 +56,15 @@ namespace_packages = true
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["torchvision.*"]
+module = [
+  "flowbot3d.*",
+  "pybullet.*",
+  "rpad.*",
+  "lightning.*",
+  "plotly.*",
+  "torchvision.*",
+  "torch_geometric.*",
+]
 ignore_missing_imports = true
 
 [tool.pylint]
