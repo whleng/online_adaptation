@@ -9,7 +9,7 @@ import wandb
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 
-from online_adaptation.datasets.flowbot import FlowBotDataModule
+from online_adaptation.datasets.flow_dm import FlowBotDataModule
 from online_adaptation.models.flowbot3d import FlowPredictorTrainingModule
 from online_adaptation.utils.script_utils import (
     PROJECT_ROOT,
