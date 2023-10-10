@@ -84,6 +84,7 @@ class FlowHistoryPyGDataset(tgd.Dataset):
         camera_chunk = "rc" if randomize_camera else "sc"
         return f"processed_history_{joint_chunk}_{camera_chunk}"
 
+    @torch.no_grad()
     def get_data(self, obj_id: str, seed=None) -> FlowHistoryData:
         # Initial randomization parameters.
         joints = "random" if self.randomize_joints else None
@@ -174,6 +175,28 @@ class FlowHistoryPyGDataset(tgd.Dataset):
         mask_t1 = (~(flow_t1 == 0.0).all(axis=-1)).astype(int)
 
         ########################################################################
+        # DOWNSAMPLE first. This is important for memory reasons.
+        ########################################################################
+
+        if self.n_points:
+            rng = np.random.default_rng(seed4)
+
+            ixs_t0 = rng.permutation(range(len(pos_t0)))[: self.n_points]
+            pos_t0 = pos_t0[ixs_t0]
+            flow_t0 = flow_t0[ixs_t0]
+            mask_t0 = mask_t0[ixs_t0]
+            seg_t0 = data_t0["seg"][ixs_t0]
+            # flow_nn_t0 = flow_nn_t0[ixs_t0]
+
+            ixs_t1 = rng.permutation(range(len(pos_t1)))[: self.n_points]
+            pos_t1 = pos_t1[ixs_t1]
+            flow_t1 = flow_t1[ixs_t1]
+            mask_t1 = mask_t1[ixs_t1]
+            seg_t1 = data_t1["seg"][ixs_t1]
+            # rev_optical_flow_gt = rev_optical_flow_gt[ixs_t1]
+            # rev_optical_flow_nn = rev_optical_flow_nn[ixs_t1]
+
+        ########################################################################
         # ESTIMATE THE PREVIOUS FLOW
         ########################################################################
 
@@ -200,7 +223,7 @@ class FlowHistoryPyGDataset(tgd.Dataset):
             link_to_actuate=link_to_actuate,
             amount_to_actuate=-d_theta,
             pos=pos_t1,
-            seg=data_t1["seg"],
+            seg=seg_t1,
             labelmap=data_t1["labelmap"],
             T_world_base=data_t1["T_world_base"],
         )
@@ -219,26 +242,6 @@ class FlowHistoryPyGDataset(tgd.Dataset):
 
         # calculate the reversed flow
         rev_optical_flow_nn = normalize_flow(pos_t0_rev_nn - pos_t1)
-
-        ########################################################################
-        # DOWNSAMPLE
-        ########################################################################
-
-        if self.n_points:
-            rng = np.random.default_rng(seed4)
-
-            ixs_t0 = rng.permutation(range(len(pos_t0)))[: self.n_points]
-            pos_t0 = pos_t0[ixs_t0]
-            flow_t0 = flow_t0[ixs_t0]
-            mask_t0 = mask_t0[ixs_t0]
-            flow_nn_t0 = flow_nn_t0[ixs_t0]
-
-            ixs_t1 = rng.permutation(range(len(pos_t1)))[: self.n_points]
-            pos_t1 = pos_t1[ixs_t1]
-            flow_t1 = flow_t1[ixs_t1]
-            mask_t1 = mask_t1[ixs_t1]
-            rev_optical_flow_gt = rev_optical_flow_gt[ixs_t1]
-            rev_optical_flow_nn = rev_optical_flow_nn[ixs_t1]
 
         data = Data(
             id=obj_id,
