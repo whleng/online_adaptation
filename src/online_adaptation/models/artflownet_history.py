@@ -218,25 +218,18 @@ class ArtFlowNetHistoryModel(L.LightningModule):
 
         # normalize the flow for visualization.
         n_f_target = f_target / f_target.norm(dim=1).max()
-        # n_f_pred = f_pred / f_target.norm(dim=1).max() * mask.view(-1, 1)
         n_f_pred = f_pred / f_target.norm(dim=1).max()
 
         # GT flow.
-        fig.add_trace(pvp.pointcloud(pos.T, downsample=1, scene="scene2"), row=2, col=1)
-
-        # fig.add_trace(
-        #     pvp._flow_trace(pos, n_f_target, sizeref, scene="scene2"), row=2, col=1
-        # )
+        fig.add_trace(pvp.pointcloud(pos, downsample=1, scene="scene2"), row=2, col=1)
         ts = pvp._flow_traces(pos, n_f_target, scene="scene2")
         for t in ts:
             fig.add_trace(t, row=2, col=1)
         fig.update_layout(scene2=pvp._3d_scene(pos))
 
         # Predicted flow.
-        fig.add_trace(pvp.pointcloud(pos.T, downsample=1, scene="scene3"), row=2, col=2)
-
-        # fig.add_trace(pvp._flow_trace(pos, n_f_pred, sizeref, scene="scene3"), row=2, col=2)
-        ts = pvp._flow_traces(pos, n_f_pred, scene="scene2")
+        fig.add_trace(pvp.pointcloud(pos, downsample=1, scene="scene3"), row=2, col=2)
+        ts = pvp._flow_traces(pos, n_f_pred, scene="scene3")
         for t in ts:
             fig.add_trace(t, row=2, col=2)
         fig.update_layout(scene3=pvp._3d_scene(pos))
