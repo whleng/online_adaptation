@@ -108,6 +108,9 @@ To train a model, run:
 
 # Flowbot
 python scripts/train.py
+
+# Flowbot history.
+python scripts/train.py dataset=flowbot_history model=flowbot_history
 ```
 
 ## Evaluation

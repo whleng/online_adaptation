@@ -7,6 +7,7 @@ import pybullet as p
 import rpad.partnet_mobility_utils.dataset as pmd
 import torch
 import torch_geometric.data as tgd
+from rpad.partnet_mobility_utils.articulate import articulate_joint
 from rpad.partnet_mobility_utils.render.pybullet import PybulletRenderer
 from torch_geometric.data import Data
 
@@ -31,10 +32,25 @@ class FlowHistoryData(Protocol):
 
     curr_pos: torch.Tensor  # Points in the point cloud.
     prev_pos: torch.Tensor  # Points in prev point cloud.
+
     last_action: torch.Tensor  # Last action to get from prev to curr point cloud.
-    prev_flow: torch.Tensor
     flow: torch.Tensor  # instantaneous positive 3D flow.
     mask: torch.Tensor  # Mask of the part of interest.
+
+    prev_flow_gt: torch.Tensor  # Ground truth previous flow.
+    prev_flow_nn: torch.Tensor  # Nearest neighbor previous flow.
+
+    rev_optical_flow_gt: torch.Tensor  # Ground truth reverse flow.
+    rev_optical_flow_nn: torch.Tensor  # Nearest neighbor reverse flow.
+
+
+def normalize_flow(flow):
+    nonzero = (flow != 0.0).any(axis=-1)
+    if nonzero.sum() > 0.0:
+        nonzero_flow = flow[nonzero]
+        largest = np.linalg.norm(nonzero_flow, axis=-1).max()
+        flow = flow / largest
+    return flow
 
 
 class FlowHistoryPyGDataset(tgd.Dataset):
@@ -68,6 +84,7 @@ class FlowHistoryPyGDataset(tgd.Dataset):
         camera_chunk = "rc" if randomize_camera else "sc"
         return f"processed_history_{joint_chunk}_{camera_chunk}"
 
+    @torch.no_grad()
     def get_data(self, obj_id: str, seed=None) -> FlowHistoryData:
         # Initial randomization parameters.
         joints = "random" if self.randomize_joints else None
@@ -75,6 +92,10 @@ class FlowHistoryPyGDataset(tgd.Dataset):
 
         rng = np.random.default_rng(seed)
         seed1, seed2, seed3, seed4 = rng.bit_generator._seed_seq.spawn(4)  # type: ignore
+
+        ########################################################################
+        # COMPUTE t-1 OBSERVATIONS
+        ########################################################################
 
         # Get the initial render.
         data_t0 = self._dataset.get(
@@ -98,6 +119,10 @@ class FlowHistoryPyGDataset(tgd.Dataset):
         # Camera should be the same.
         camera_xyz_t1 = data_t0["T_world_cam"][:3, 3]
         joints_t0 = data_t0["angles"]
+
+        ########################################################################
+        # COMPUTE t OBSERVATIONS
+        ########################################################################
 
         # Randomly select a joint to modify by poking through the guts.
         renderer: PybulletRenderer = self._dataset.renderers[obj_id]  # type: ignore
@@ -149,7 +174,10 @@ class FlowHistoryPyGDataset(tgd.Dataset):
 
         mask_t1 = (~(flow_t1 == 0.0).all(axis=-1)).astype(int)
 
-        # Downsample.
+        ########################################################################
+        # DOWNSAMPLE first. This is important for memory reasons.
+        ########################################################################
+
         if self.n_points:
             rng = np.random.default_rng(seed4)
 
@@ -157,21 +185,76 @@ class FlowHistoryPyGDataset(tgd.Dataset):
             pos_t0 = pos_t0[ixs_t0]
             flow_t0 = flow_t0[ixs_t0]
             mask_t0 = mask_t0[ixs_t0]
+            seg_t0 = data_t0["seg"][ixs_t0]
+            # flow_nn_t0 = flow_nn_t0[ixs_t0]
 
             ixs_t1 = rng.permutation(range(len(pos_t1)))[: self.n_points]
             pos_t1 = pos_t1[ixs_t1]
             flow_t1 = flow_t1[ixs_t1]
             mask_t1 = mask_t1[ixs_t1]
+            seg_t1 = data_t1["seg"][ixs_t1]
+            # rev_optical_flow_gt = rev_optical_flow_gt[ixs_t1]
+            # rev_optical_flow_nn = rev_optical_flow_nn[ixs_t1]
+
+        ########################################################################
+        # ESTIMATE THE PREVIOUS FLOW
+        ########################################################################
+
+        # For each point in the previous point cloud, find the nearest neighbor
+        # in the current point cloud.
+        dist = torch.cdist(torch.from_numpy(pos_t0), torch.from_numpy(pos_t1)).numpy()
+
+        pos_t1_nn_ix = np.argmin(dist, axis=1)
+        pos_t1_nn = pos_t1[pos_t1_nn_ix]
+
+        # calculate the previous flow
+        flow_nn_t0 = normalize_flow(pos_t1_nn - pos_t0)
+
+        ########################################################################
+        # COMPUTE REVERSE OPTICAL FLOWS
+        ########################################################################
+
+        link_to_actuate = self._dataset.pm_objs[obj_id].obj.get_joint(joint_name).child
+
+        # Imagine where t1 points would have been.
+        pos_t0_rev_gt = articulate_joint(
+            obj=self._dataset.pm_objs[obj_id],
+            current_jas=data_t1["angles"],
+            link_to_actuate=link_to_actuate,
+            amount_to_actuate=-d_theta,
+            pos=pos_t1,
+            seg=seg_t1,
+            labelmap=data_t1["labelmap"],
+            T_world_base=data_t1["T_world_base"],
+        )
+
+        rev_optical_flow_gt = normalize_flow(pos_t0_rev_gt - pos_t1)
+
+        # Now try and estimate what an optical flow method might return, by finding
+        # the nearest neighbor in the previous point cloud to the ground-truth reverse
+        # point cloud.
+        dist = torch.cdist(
+            torch.from_numpy(pos_t0_rev_gt), torch.from_numpy(pos_t0)
+        ).numpy()
+
+        pos_t0_rev_nn_ix = np.argmin(dist, axis=1)
+        pos_t0_rev_nn = pos_t0[pos_t0_rev_nn_ix]
+
+        # calculate the reversed flow
+        rev_optical_flow_nn = normalize_flow(pos_t0_rev_nn - pos_t1)
 
         data = Data(
             id=obj_id,
             curr_pos=torch.from_numpy(pos_t1).float(),
             prev_pos=torch.from_numpy(pos_t0).float(),
             action=torch.from_numpy(action).float(),
-            prev_flow=torch.from_numpy(flow_t0).float(),
+            prev_flow_gt=torch.from_numpy(flow_t0).float(),
+            prev_flow_nn=torch.from_numpy(flow_nn_t0).float(),
             flow=torch.from_numpy(flow_t1).float(),
             mask=torch.from_numpy(mask_t1).float(),
             prev_mask=torch.from_numpy(mask_t0).float(),
+            rev_optical_flow_gt=torch.from_numpy(rev_optical_flow_gt).float(),
+            rev_optical_flow_nn=torch.from_numpy(rev_optical_flow_nn).float(),
         )
 
         return cast(FlowHistoryData, data)
