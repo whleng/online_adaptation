@@ -102,7 +102,7 @@ class FlowDatasetTformerHistory(tgd.Dataset):
     def get_processed_dir(randomize_joints, randomize_camera):
         joint_chunk = "rj" if randomize_joints else "sj"
         camera_chunk = "rc" if randomize_camera else "sc"
-        return f"processed_history_{joint_chunk}_{camera_chunk}"
+        return f"processed_history_tformer_{joint_chunk}_{camera_chunk}"
 
     def get_data(self, obj_id: str, seed=None) -> FlowDataTformerHistory:
         # Initial randomization parameters.
@@ -227,7 +227,7 @@ class FlowDatasetTformerHistory(tgd.Dataset):
             num_obs += 1
             theta += d_theta
 
-        start_ix = random.randint(0, num_obs - 1)
+        start_ix = random.randint(0, num_obs - 2)
         end_ix = random.randint(start_ix + 1, num_obs)
         K = end_ix - start_ix
 
@@ -239,9 +239,9 @@ class FlowDatasetTformerHistory(tgd.Dataset):
 
         data = Data(
             id=obj_id,
-            curr_pos=torch.from_numpy(pos_t1).float(),
+            curr_pos=torch.from_numpy(curr_pos).float(),
             action=torch.from_numpy(action).float(),
-            flow=torch.from_numpy(flow_t1).float(),
+            flow=torch.from_numpy(flow).float(),
             mask=torch.from_numpy(mask_t1).float(),
             history=torch.from_numpy(history).float(),  # Snapshot of history
             flow_history=torch.from_numpy(
