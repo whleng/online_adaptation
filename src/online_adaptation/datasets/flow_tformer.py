@@ -1,3 +1,4 @@
+import math
 import random
 from typing import List, Optional, Protocol, Union, cast
 
@@ -115,6 +116,7 @@ class FlowDatasetTformerHistory(tgd.Dataset):
         data_t0 = self._dataset.get(
             obj_id=obj_id, joints=joints, camera_xyz=camera_xyz, seed=seed1
         )
+
         raw_data_obj = self._dataset.pm_objs[obj_id].obj
 
         pos_t0 = data_t0["pos"]
@@ -153,7 +155,16 @@ class FlowDatasetTformerHistory(tgd.Dataset):
 
         joint = raw_data_obj.get_joint(joint_name)
 
-        min_theta, max_theta = joint.limit
+        joint_type = get_joint_type(
+            obj_id=renderer._render_env.obj_id,
+            client_id=renderer._render_env.client_id,
+            joint_ix=joint_ix,
+        )
+
+        if joint.limit == None:  # revolute free moving
+            min_theta, max_theta = 0, 2 * math.pi
+        else:
+            min_theta, max_theta = joint.limit
 
         # Decide the "delta" for a specific joint.
         d_theta = (max_theta - min_theta) / 100
@@ -173,8 +184,10 @@ class FlowDatasetTformerHistory(tgd.Dataset):
             client_id=renderer._render_env.client_id,
         )
 
-        theta = min_theta + d_theta
+        theta = min_theta
         num_obs = 0
+
+        lengths = []
 
         while theta < max_theta:
             joints_t1[joint_name] = theta
@@ -220,22 +233,32 @@ class FlowDatasetTformerHistory(tgd.Dataset):
             if num_obs == 0:
                 history = np.array([pos_t0])
                 flow_history = np.array([flow_t0])
+                lengths.append(len(pos_t0))
             else:
                 history = np.append(history, [pos_t1], axis=0)
                 flow_history = np.append(flow_history, [flow_t1], axis=0)
+                lengths.append(len(pos_t1))
 
             num_obs += 1
             theta += d_theta
 
-        start_ix = random.randint(0, num_obs - 2)
-        end_ix = random.randint(start_ix + 1, num_obs)
+        start_ix = random.randint(0, num_obs - 12)  # min 10 observations
+        end_ix = random.randint(start_ix + 1, num_obs - 1)
         K = end_ix - start_ix
 
-        curr_pos = history[end_ix]
-        flow = flow_history[end_ix]
+        try:
+            curr_pos = history[end_ix]
+            flow = flow_history[end_ix]
+
+        except:
+            breakpoint()
 
         history = history[start_ix:end_ix]
         flow_history = flow_history[start_ix:end_ix]
+        lengths = lengths[start_ix:end_ix]
+
+        history = history.reshape(-1, history.shape[-1])
+        flow_history = flow_history.reshape(-1, flow_history.shape[-1])
 
         data = Data(
             id=obj_id,
@@ -249,6 +272,7 @@ class FlowDatasetTformerHistory(tgd.Dataset):
             ).float(),  # Snapshot of flow history
             link=joint.child,  # child of the joint gives you the link that the joint is connected to
             K=K,  # length of history
+            lengths=torch.as_tensor(lengths).int(),
         )
 
         return cast(FlowDataTformerHistory, data)

@@ -11,6 +11,9 @@ from lightning.pytorch.loggers import WandbLogger
 
 from online_adaptation.datasets.flow_dm import FlowBotDataModule
 from online_adaptation.models.flowbot3d import FlowPredictorTrainingModule
+from online_adaptation.models.history_tformer import (
+    FlowHistoryTformerPredictorTrainingModule,
+)
 from online_adaptation.utils.script_utils import (
     PROJECT_ROOT,
     LogPredictionSamplesCallback,
@@ -19,9 +22,11 @@ from online_adaptation.utils.script_utils import (
 
 data_module_class = {
     "flowbot": FlowBotDataModule,
+    "flowbot_history_tformer": FlowBotDataModule,
 }
 training_module_class = {
     "flowbot": FlowPredictorTrainingModule,
+    "flowbot_history_tformer": FlowHistoryTformerPredictorTrainingModule,
 }
 
 
@@ -64,6 +69,7 @@ def main(cfg):
         batch_size=cfg.training.batch_size,
         num_workers=cfg.resources.num_workers,
         n_proc=cfg.resources.n_proc_per_worker,
+        ds_type=cfg.dataset.name,
         seed=cfg.seed,
         trajectory_len=trajectory_len,  # Only used when training trajectory model
     )
@@ -152,6 +158,8 @@ def main(cfg):
         devices=cfg.resources.gpus,
         precision="16-mixed",
         max_epochs=cfg.training.epochs,
+        # max_steps=10,
+        # profiler="advanced",
         logger=logger,
         callbacks=[
             # Callback which logs whatever visuals (i.e. dataset examples, preds, etc.) we want.

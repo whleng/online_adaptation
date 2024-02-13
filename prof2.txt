@@ -1,0 +1,46 @@
+Traceback (most recent call last):
+  File "scripts/train.py", line 6, in <module>
+    import rpad.pyg.nets.pointnet2 as pnp
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/rpad/pyg/nets/pointnet2.py", line 7, in <module>
+    from torch_geometric.data import Data
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/torch_geometric/__init__.py", line 4, in <module>
+    import torch_geometric.data
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/torch_geometric/data/__init__.py", line 1, in <module>
+    from .data import Data
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/torch_geometric/data/data.py", line 20, in <module>
+    from torch_sparse import SparseTensor
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/torch_sparse/__init__.py", line 39, in <module>
+    from .storage import SparseStorage  # noqa
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/torch_sparse/storage.py", line 7, in <module>
+    from torch_sparse.utils import Final, index_sort
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/torch_sparse/utils.py", line 5, in <module>
+    import torch_sparse.typing
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/torch_sparse/typing.py", line 2, in <module>
+    import pyg_lib  # noqa
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/pyg_lib/__init__.py", line 8, in <module>
+    import pyg_lib.ops  # noqa
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/pyg_lib/ops/__init__.py", line 6, in <module>
+    from .scatter_reduce import fused_scatter_reduce
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/pyg_lib/ops/scatter_reduce.py", line 6, in <module>
+    from pyg_lib._triton import tl, triton
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/pyg_lib/_triton.py", line 4, in <module>
+    import triton
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/__init__.py", line 29, in <module>
+    from . import language
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/language/__init__.py", line 8, in <module>
+    from . import libdevice
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/language/libdevice.py", line 4, in <module>
+    from . import core, extern
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/language/core.py", line 1176, in <module>
+    def abs(x):
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/runtime/jit.py", line 419, in jit
+    return decorator(fn)
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/runtime/jit.py", line 412, in decorator
+    return JITFunction(
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/runtime/jit.py", line 321, in __init__
+    self.run = self._make_launcher()
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/runtime/jit.py", line 288, in _make_launcher
+    scope = {"version_key": version_key(), "get_cuda_stream": get_cuda_stream,
+  File "/home/wenhui/.pyenv/versions/3.8.18/envs/oa/lib/python3.8/site-packages/triton/runtime/jit.py", line 87, in version_key
+    contents += [hashlib.md5(f.read()).hexdigest()]
+KeyboardInterrupt

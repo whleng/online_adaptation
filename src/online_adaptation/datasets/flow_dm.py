@@ -9,6 +9,8 @@ import torch_geometric.loader as tgl
 from flowbot3d.datasets.flow_dataset_pyg import Flowbot3DPyGDataset
 from rpad.pyg.dataset import CachedByKeyDataset
 
+from online_adaptation.datasets.flow_tformer import FlowDatasetTformerHistory
+
 
 class FlowBotDataModule(L.LightningDataModule):
     def __init__(
@@ -17,6 +19,7 @@ class FlowBotDataModule(L.LightningDataModule):
         batch_size,
         num_workers,
         n_proc,
+        ds_type,
         randomize_camera: bool = True,
         seed=42,
         **kwargs,
@@ -25,8 +28,13 @@ class FlowBotDataModule(L.LightningDataModule):
         self.batch_size = batch_size
         self.seed = seed
 
+        if ds_type == "flowbot":
+            dset_cls = Flowbot3DPyGDataset
+        elif ds_type == "flowbot_history_tformer":
+            dset_cls = FlowDatasetTformerHistory
+
         self.train_dset = CachedByKeyDataset(
-            dset_cls=Flowbot3DPyGDataset,
+            dset_cls=dset_cls,
             dset_kwargs=dict(
                 root=os.path.join(root, "raw"),
                 split="umpnet-train-train",
@@ -34,7 +42,7 @@ class FlowBotDataModule(L.LightningDataModule):
             ),
             data_keys=rpd.UMPNET_TRAIN_TRAIN_OBJ_IDS,
             root=root,
-            processed_dirname=Flowbot3DPyGDataset.get_processed_dir(
+            processed_dirname=dset_cls.get_processed_dir(
                 True,
                 randomize_camera,
             ),
@@ -46,7 +54,7 @@ class FlowBotDataModule(L.LightningDataModule):
 
         # For validation, we don't want to repeat the data.
         self.train_val_dset = CachedByKeyDataset(
-            dset_cls=Flowbot3DPyGDataset,
+            dset_cls=dset_cls,
             dset_kwargs=dict(
                 root=os.path.join(root, "raw"),
                 split="umpnet-train-train",
@@ -54,7 +62,7 @@ class FlowBotDataModule(L.LightningDataModule):
             ),
             data_keys=rpd.UMPNET_TRAIN_TRAIN_OBJ_IDS,
             root=root,
-            processed_dirname=Flowbot3DPyGDataset.get_processed_dir(
+            processed_dirname=dset_cls.get_processed_dir(
                 True,
                 randomize_camera,
             ),
@@ -65,7 +73,7 @@ class FlowBotDataModule(L.LightningDataModule):
         )
 
         self.val_dset = CachedByKeyDataset(
-            dset_cls=Flowbot3DPyGDataset,
+            dset_cls=dset_cls,
             dset_kwargs=dict(
                 root=os.path.join(root, "raw"),
                 split="umpnet-train-test",
@@ -73,7 +81,7 @@ class FlowBotDataModule(L.LightningDataModule):
             ),
             data_keys=rpd.UMPNET_TRAIN_TEST_OBJ_IDS,
             root=root,
-            processed_dirname=Flowbot3DPyGDataset.get_processed_dir(
+            processed_dirname=dset_cls.get_processed_dir(
                 True,
                 randomize_camera,
             ),
@@ -84,7 +92,7 @@ class FlowBotDataModule(L.LightningDataModule):
         )
 
         self.unseen_dset = CachedByKeyDataset(
-            dset_cls=Flowbot3DPyGDataset,
+            dset_cls=dset_cls,
             dset_kwargs=dict(
                 root=os.path.join(root, "raw"),
                 split="umpnet-test",
@@ -92,7 +100,7 @@ class FlowBotDataModule(L.LightningDataModule):
             ),
             data_keys=rpd.UMPNET_TEST_OBJ_IDS,
             root=root,
-            processed_dirname=Flowbot3DPyGDataset.get_processed_dir(
+            processed_dirname=dset_cls.get_processed_dir(
                 True,
                 randomize_camera,
             ),

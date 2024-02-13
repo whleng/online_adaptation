@@ -1,0 +1,49 @@
+{
+    "dataset": {
+        "batch_size": 64,
+        "data_dir": "/home/wenhui/datasets/partnet-mobility",
+        "dataset": "umpnet",
+        "lr": 0.001,
+        "mask_input_channel": true,
+        "model": "flowbot_history_tformer",
+        "name": "flowbot_history_tformer",
+        "randomize_camera": true,
+        "seed": 42
+    },
+    "job_type": "train_flowbot_history_tformer",
+    "lightning": {
+        "checkpoint_dir": "/home/wenhui/online_adaptation/logs/train_flowbot_history_tformer/2024-01-30/17-40-36/checkpoints"
+    },
+    "log_dir": "/home/wenhui/online_adaptation/logs",
+    "mode": "train",
+    "model": {
+        "name": "artflownet_history_tformer"
+    },
+    "output_dir": "/home/wenhui/online_adaptation/logs/train_flowbot_history_tformer/2024-01-30/17-40-36",
+    "resources": {
+        "gpus": [
+            0
+        ],
+        "n_proc_per_worker": 2,
+        "num_workers": 30
+    },
+    "seed": 42,
+    "training": {
+        "batch_size": 16,
+        "check_val_every_n_epoch": 1,
+        "epochs": 100,
+        "lr": 0.001,
+        "mask_input_channel": true,
+        "mode": "delta",
+        "trajectory_len": 1,
+        "vectorize": true
+    },
+    "wandb": {
+        "artifact_dir": "/home/wenhui/online_adaptation/wandb_artifacts",
+        "entity": "r-pad",
+        "group": null,
+        "project": "online_adaptation",
+        "save_dir": "/home/wenhui/online_adaptation/logs/train_flowbot_history_tformer/2024-01-30/17-40-36"
+    }
+}
+Sanity Checking: 0it [00:00, ?it/s]Sanity Checking:   0%|          | 0/2 [00:00<?, ?it/s]Sanity Checking DataLoader 0:   0%|          | 0/2 [00:00<?, ?it/s]Sanity Checking DataLoader 0:  50%|█████     | 1/2 [00:05<00:05,  5.24s/it]Sanity Checking DataLoader 0: 100%|██████████| 2/2 [00:09<00:00,  4.79s/it]Sanity Checking DataLoader 0:   0%|          | 0/2 [00:00<?, ?it/s]        Sanity Checking DataLoader 1:   0%|          | 0/2 [00:00<?, ?it/s]Sanity Checking DataLoader 1:  50%|█████     | 1/2 [00:03<00:03,  3.86s/it]Sanity Checking DataLoader 1: 100%|██████████| 2/2 [00:07<00:00,  3.52s/it]Sanity Checking DataLoader 1:   0%|          | 0/2 [00:00<?, ?it/s]        Sanity Checking DataLoader 2:   0%|          | 0/2 [00:00<?, ?it/s]Sanity Checking DataLoader 2:  50%|█████     | 1/2 [00:05<00:05,  5.02s/it]Sanity Checking DataLoader 2: 100%|██████████| 2/2 [00:07<00:00,  3.82s/it]                                                                           Training: 0it [00:00, ?it/s]Training:   0%|          | 0/3144 [00:00<?, ?it/s]Epoch 0:   0%|          | 0/3144 [00:00<?, ?it/s] Epoch 0:   0%|          | 1/3144 [00:03<3:20:23,  3.83s/it]Epoch 0:   0%|          | 1/3144 [00:03<3:20:25,  3.83s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 2/3144 [00:08<3:53:37,  4.46s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 2/3144 [00:08<3:53:38,  4.46s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 3/3144 [00:13<3:55:07,  4.49s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 3/3144 [00:13<3:55:08,  4.49s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 4/3144 [00:15<3:22:35,  3.87s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 4/3144 [00:15<3:22:36,  3.87s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 5/3144 [00:18<3:11:24,  3.66s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 5/3144 [00:18<3:11:25,  3.66s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 6/3144 [00:23<3:21:49,  3.86s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 6/3144 [00:23<3:21:49,  3.86s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 7/3144 [00:27<3:22:47,  3.88s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 7/3144 [00:27<3:22:47,  3.88s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 8/3144 [00:31<3:29:00,  4.00s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 8/3144 [00:31<3:29:00,  4.00s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 9/3144 [00:35<3:26:00,  3.94s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 9/3144 [00:35<3:26:00,  3.94s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 10/3144 [00:38<3:22:46,  3.88s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 10/3144 [00:38<3:22:46,  3.88s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 10/3144 [00:38<3:22:46,  3.88s/it, v_num=09g0, train/loss=nan.0]Epoch 0:   0%|          | 10/3144 [00:39<3:24:15,  3.91s/it, v_num=09g0, train/loss=nan.0]
